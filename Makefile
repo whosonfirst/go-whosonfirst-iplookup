@@ -6,6 +6,10 @@ self:	prep
 	mkdir -p src/github.com/whosonfirst/go-whosonfirst-iplookup
 	cp iplookup.go src/github.com/whosonfirst/go-whosonfirst-iplookup/
 
+fmt:
+	go fmt cmd/*.go
+	go fmt *.go
+
 deps:
 	@GOPATH=$(shell pwd) go get -u "github.com/oschwald/maxminddb-golang"
 	@GOPATH=$(shell pwd) go get -u "github.com/whosonfirst/go-whosonfirst-csvdb"
