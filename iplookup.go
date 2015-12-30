@@ -3,8 +3,10 @@ package iplookup
 import (
 	"errors"
 	_ "fmt"
+	csvdb "github.com/whosonfirst/go-whosonfirst-csvdb"
 	"github.com/oschwald/maxminddb-golang"
 	"net"
+	"strconv"
 )
 
 type Response struct {
@@ -19,9 +21,10 @@ type Response struct {
 
 type Lookup struct {
 	mmdb *maxminddb.Reader
+	concordances *csvdb.CSVDB
 }
 
-func NewLookup(db string) (*Lookup, error) {
+func NewLookup(db string, meta string) (*Lookup, error) {
 
 	mmdb, err := maxminddb.Open(db)
 
@@ -29,7 +32,21 @@ func NewLookup(db string) (*Lookup, error) {
 		return nil, err
 	}
 
-	lookup := Lookup{mmdb}
+	to_index := make([]string, 0)
+	to_index = append(to_index, "gn:id")
+
+	concordances := csvdb.NewCSVDB()
+	err = concordances.IndexCSVFile(meta, to_index)
+
+	if err != nil {
+	   return nil, err
+	}
+
+	lookup := Lookup{
+	       mmdb: mmdb,
+	       concordances: concordances,
+	}
+
 	return &lookup, nil
 }
 
@@ -42,12 +59,52 @@ func (l *Lookup) Query(addr net.IP) (int64, error) {
 		return -1, err
 	}
 
-	city_id := rsp.City.GeonameId
-	country_id := rsp.Country.GeonameId
+	possible := make([]uint64, 0)
 
-	if city_id == 0 && country_id == 0 {
-		return -1, errors.New("Unable to locate address")
+	possible = append(possible, rsp.City.GeonameId)
+	possible = append(possible, rsp.Country.GeonameId)
+
+	for _, gnid := range possible {
+
+	    if gnid == 0 {
+	       continue
+	    }
+
+	    wofid, err := l.Concordify(gnid)
+
+	    if err != nil {
+	       continue
+	    }
+
+	    return wofid, nil
 	}
 
-	return 0, nil
+	return -1, errors.New("Unabled to lookup address")
+}
+
+func (l *Lookup) Concordify (gnid uint64) (int64, error) {
+
+           str_gnid := strconv.FormatUint(gnid, 16)
+	   rows, err := l.concordances.Where("gn:id", str_gnid)
+
+	   if err != nil {
+	      return -1, err
+	   }
+
+	   first := rows[0]
+	   others := first.AsMap()
+
+	   str_wofid, ok := others["wof:id"]
+
+	   if !ok {
+	      return -1, errors.New("Unable to locate concordance")
+	   }
+
+	   wofid, err := strconv.ParseInt(str_wofid, 10, 64)
+
+	   if err != nil {
+	      return -1, err
+	   }
+
+	   return wofid, nil
 }
