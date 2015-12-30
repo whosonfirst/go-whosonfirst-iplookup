@@ -4,12 +4,14 @@ import (
 	"errors"
 	_ "fmt"
 	"github.com/oschwald/maxminddb-golang"
-	csvdb "github.com/whosonfirst/go-whosonfirst-csvdb"
+	"github.com/whosonfirst/go-whosonfirst-csvdb"
+	"github.com/whosonfirst/go-whosonfirst-log"
 	"net"
 	"strconv"
+	"time"
 )
 
-type Response struct {
+type MMDBResponse struct {
 	Country struct {
 		ISOCode   string `maxminddb:"iso_code"`
 		GeonameId uint64 `maxminddb:"geoname_id"`
@@ -19,12 +21,13 @@ type Response struct {
 	} `maxminddb:"city"`
 }
 
-type Lookup struct {
+type IPLookup struct {
 	mmdb         *maxminddb.Reader
 	concordances *csvdb.CSVDB
+	logger       *log.WOFLogger
 }
 
-func NewLookup(db string, meta string) (*Lookup, error) {
+func NewIPLookup(db string, meta string, logger *log.WOFLogger) (*IPLookup, error) {
 
 	mmdb, err := maxminddb.Open(db)
 
@@ -35,25 +38,32 @@ func NewLookup(db string, meta string) (*Lookup, error) {
 	to_index := make([]string, 0)
 	to_index = append(to_index, "gn:id")
 
+	t1 := time.Now()
+
 	concordances := csvdb.NewCSVDB()
 	err = concordances.IndexCSVFile(meta, to_index)
+
+	t2 := time.Since(t1)
+
+	logger.Debug("time to index concordances %v", t2)
 
 	if err != nil {
 		return nil, err
 	}
 
-	lookup := Lookup{
+	ip := IPLookup{
 		mmdb:         mmdb,
 		concordances: concordances,
+		logger:       logger,
 	}
 
-	return &lookup, nil
+	return &ip, nil
 }
 
-func (l *Lookup) Query(addr net.IP) (int64, error) {
+func (ip *IPLookup) Query(addr net.IP) (int64, error) {
 
-	var rsp Response
-	err := l.mmdb.Lookup(addr, &rsp)
+	var rsp MMDBResponse
+	err := ip.mmdb.Lookup(addr, &rsp)
 
 	if err != nil {
 		return -1, err
@@ -64,7 +74,7 @@ func (l *Lookup) Query(addr net.IP) (int64, error) {
 	possible = append(possible, rsp.City.GeonameId)
 	possible = append(possible, rsp.Country.GeonameId)
 
-	// fmt.Println("possible", possible)
+	ip.logger.Debug("possible matches for %v: %v", addr, possible)
 
 	for _, gnid := range possible {
 
@@ -72,7 +82,7 @@ func (l *Lookup) Query(addr net.IP) (int64, error) {
 			continue
 		}
 
-		wofid, err := l.Concordify(gnid)
+		wofid, err := ip.ConcordifyGeonames(gnid)
 
 		if err != nil {
 			continue
@@ -84,13 +94,13 @@ func (l *Lookup) Query(addr net.IP) (int64, error) {
 	return -1, errors.New("Unabled to lookup address")
 }
 
-func (l *Lookup) Concordify(gnid uint64) (int64, error) {
+func (ip *IPLookup) ConcordifyGeonames(gnid uint64) (int64, error) {
 
-     	// fmt.Println("concordify geonames", gnid)
+	ip.logger.Debug("concordify geonames %d", gnid)
 
 	str_gnid := strconv.FormatUint(gnid, 10)
 
-	rows, err := l.concordances.Where("gn:id", str_gnid)
+	rows, err := ip.concordances.Where("gn:id", str_gnid)
 
 	if err != nil {
 		return -1, err
@@ -111,5 +121,6 @@ func (l *Lookup) Concordify(gnid uint64) (int64, error) {
 		return -1, err
 	}
 
+	ip.logger.Debug("geonames ID (%d) is WOF ID %d", gnid, wofid)
 	return wofid, nil
 }

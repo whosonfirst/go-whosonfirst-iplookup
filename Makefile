@@ -13,6 +13,7 @@ fmt:
 deps:
 	@GOPATH=$(shell pwd) go get -u "github.com/oschwald/maxminddb-golang"
 	@GOPATH=$(shell pwd) go get -u "github.com/whosonfirst/go-whosonfirst-csvdb"
+	@GOPATH=$(shell pwd) go get -u "github.com/whosonfirst/go-whosonfirst-log"
 
 bin:	self
 	@GOPATH=$(shell pwd) go	build -o bin/wof-iplookup cmd/wof-iplookup.go
