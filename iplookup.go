@@ -64,6 +64,8 @@ func (l *Lookup) Query(addr net.IP) (int64, error) {
 	possible = append(possible, rsp.City.GeonameId)
 	possible = append(possible, rsp.Country.GeonameId)
 
+	// fmt.Println("possible", possible)
+
 	for _, gnid := range possible {
 
 		if gnid == 0 {
@@ -84,7 +86,10 @@ func (l *Lookup) Query(addr net.IP) (int64, error) {
 
 func (l *Lookup) Concordify(gnid uint64) (int64, error) {
 
-	str_gnid := strconv.FormatUint(gnid, 16)
+     	// fmt.Println("concordify geonames", gnid)
+
+	str_gnid := strconv.FormatUint(gnid, 10)
+
 	rows, err := l.concordances.Where("gn:id", str_gnid)
 
 	if err != nil {
