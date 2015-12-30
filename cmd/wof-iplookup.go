@@ -15,12 +15,20 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	lookup, _ := iplookup.NewLookup(*mmdb, *concordances)
+	lookup, err := iplookup.NewLookup(*mmdb, *concordances)
+
+	if err != nil {
+	   panic(err)
+	}
 
 	for _, addr := range args {
 
 		ip := net.ParseIP(addr)
-		r, _ := lookup.Query(ip)
+		r, err := lookup.Query(ip)
+
+		if err != nil {
+		   panic(err)
+		}
 
 		fmt.Printf("%s is %d\n", addr, r)
 	}
