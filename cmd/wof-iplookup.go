@@ -34,12 +34,13 @@ func main() {
 	for _, addr := range args {
 
 		ip := net.ParseIP(addr)
-		r, err := lookup.Query(ip)
+		wofid, err := lookup.Query(ip)
 
 		if err != nil {
-			logger.Warning("failed to lookup %s, because %v", addr, err)
+			logger.Error("failed to lookup %s, because %v", addr, err)
 		}
 
-		fmt.Printf("%s is %d\n", addr, r)
+		logger.Debug("%s is %d", addr, wofid)
+		fmt.Println(wofid)
 	}
 }

@@ -10,7 +10,13 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 )
+
+type Response struct {
+	IPAddress string `json:"ip"`
+	WOFId     int64  `json:"wofid"`
+}
 
 func main() {
 
@@ -40,10 +46,19 @@ func main() {
 		query := req.URL.Query()
 		ip := query.Get("ip")
 
-		// TO DO: chunk out port numbers etc.
+		if ip == "" {
+			remote := strings.Split(req.RemoteAddr, ":")
+			ip = remote[0]
+		}
 
 		if ip == "" {
-			ip = req.RemoteAddr
+			http.Error(rsp, "Missing IP address", http.StatusInternalServerError)
+			return
+		}
+
+		if ip == "127.0.0.1" {
+			http.Error(rsp, "We are all localhost", http.StatusInternalServerError)
+			return
 		}
 
 		logger.Debug("parse IP %s", ip)
@@ -56,7 +71,8 @@ func main() {
 			return
 		}
 
-		js, err := json.Marshal(wofid)
+		answer := Response{ip, wofid}
+		js, err := json.Marshal(answer)
 
 		if err != nil {
 			http.Error(rsp, err.Error(), http.StatusInternalServerError)
