@@ -27,6 +27,7 @@ mmdb := "GeoLite2-City.mmdb"
 concordances := "wof-concordances-latest.csv"
 
 addr := "142.213.160.134"
+ip := net.ParseIP(addr)
 
 logger := log.NewWOFLogger("[wof-iplookup] ")
 logger.AddLogger(writer, "warning")
@@ -34,8 +35,6 @@ logger.AddLogger(writer, "warning")
 // Note the lack of error-handling
 
 lookup, _ := iplookup.NewIPLookup(mmdb, concordances, logger)
-
-ip := net.ParseIP(addr)
 wofid, _ := lookup.Query(ip)
 ```
 
