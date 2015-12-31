@@ -82,6 +82,10 @@ $> curl -s 'http://localhost:8668?ip=205.193.117.158' | python -mjson.tool
 }
 ```
 
+## Caveats
+
+* The `wof-iplookup-server` does not return any data (like centroids, hierarchies or geometries) for a WOF record besides its ID. Yet.
+
 ## See also
 
 * https://github.com/oschwald/maxminddb-golang
