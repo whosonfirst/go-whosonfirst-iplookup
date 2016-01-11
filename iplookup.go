@@ -1,17 +1,18 @@
 package iplookup
 
 import (
-	"errors"
+	_ "errors"
 	_ "fmt"
 	"github.com/oschwald/maxminddb-golang"
 	"github.com/whosonfirst/go-whosonfirst-log"
 	"net"
-	"strconv"
-	"time"
 )
 
-type WOFResponse struct {
+// See also
+// https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer/blob/master/lib/Whosonfirst/MaxMind/Types.pm
 
+type WOFResponse struct {
+     whosonfirst_id uint64 `maxminddb:"whosonfirst_id"`
 }
 
 type MaxMindResponse struct {
