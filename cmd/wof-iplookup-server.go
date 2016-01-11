@@ -21,11 +21,10 @@ type Response struct {
 func main() {
 
 	var mmdb = flag.String("mmdb", "", "")
-	var concordances = flag.String("concordances", "", "")
 	var host = flag.String("host", "localhost", "The hostname to listen for requests on")
 	var port = flag.Int("port", 8668, "The port number to listen for requests on")
 	var cors = flag.Bool("cors", false, "Enable CORS headers")
-	var loglevel = flag.String("loglevel", "warning", "")
+	var loglevel = flag.String("loglevel", "status", "")
 
 	flag.Parse()
 
@@ -34,7 +33,8 @@ func main() {
 	logger := log.NewWOFLogger("[wof-iplookup] ")
 	logger.AddLogger(writer, *loglevel)
 
-	lookup, err := iplookup.NewIPLookup(*mmdb, *concordances, logger)
+	source := "wof"
+	lookup, err := iplookup.NewIPLookup(*mmdb, source, logger)
 
 	if err != nil {
 		logger.Error("failed to create IPLookup because %v", err)
@@ -93,7 +93,7 @@ func main() {
 
 	endpoint := fmt.Sprintf("%s:%d", *host, *port)
 
-	logger.Info("wof-iplookup-server running at %s", endpoint)
+	logger.Status("wof-iplookup-server running at %s", endpoint)
 
 	http.HandleFunc("/", handler)
 	http.ListenAndServe(endpoint, nil)
