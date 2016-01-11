@@ -2,17 +2,16 @@ package iplookup
 
 import (
 	_ "errors"
-	_ "fmt"
+	_"fmt"
 	"github.com/oschwald/maxminddb-golang"
 	"github.com/whosonfirst/go-whosonfirst-log"
 	"net"
 )
 
-// See also
-// https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer/blob/master/lib/Whosonfirst/MaxMind/Types.pm
+// See also: https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer/blob/master/lib/Whosonfirst/MaxMind/Types.pm
 
 type WOFResponse struct {
-     whosonfirst_id uint64 `maxminddb:"whosonfirst_id"`
+          WhosonfirstId uint64 `maxminddb:"whosonfirst_id"`	// see the way we're prefixing this with maxmindb... yeah, I'm not sure either
 }
 
 type MaxMindResponse struct {
@@ -50,7 +49,12 @@ func NewIPLookup(db string, source string, logger *log.WOFLogger) (*IPLookup, er
 
 func (ip *IPLookup) Query(addr net.IP) (int64, error) {
 
-     // please to be reading ip.source...
+     // please to be reading ip.source and adjusting accordingly...
+
+     return ip.query_wof(addr)
+}
+
+func (ip *IPLookup) query_wof(addr net.IP) (int64, error) {
 
 	var rsp WOFResponse
 	err := ip.mmdb.Lookup(addr, &rsp)
@@ -59,5 +63,6 @@ func (ip *IPLookup) Query(addr net.IP) (int64, error) {
 		return -1, err
 	}
 
-	return 0, nil
+	wofid := int64(rsp.WhosonfirstId)
+	return wofid, nil
 }

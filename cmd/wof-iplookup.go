@@ -13,7 +13,6 @@ import (
 func main() {
 
 	var mmdb = flag.String("mmdb", "", "")
-	var concordances = flag.String("concordances", "", "")
 	var loglevel = flag.String("loglevel", "warning", "")
 
 	flag.Parse()
@@ -24,7 +23,9 @@ func main() {
 	logger := log.NewWOFLogger("[wof-iplookup] ")
 	logger.AddLogger(writer, *loglevel)
 
-	lookup, err := iplookup.NewIPLookup(*mmdb, *concordances, logger)
+	source := "wof"
+
+	lookup, err := iplookup.NewIPLookup(*mmdb, source, logger)
 
 	if err != nil {
 		logger.Error("failed to create IPLookup because %v", err)
