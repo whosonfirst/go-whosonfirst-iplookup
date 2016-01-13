@@ -11,8 +11,17 @@ import (
 // See also: https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer/blob/master/lib/Whosonfirst/MaxMind/Types.pm
 // see the way we're prefixing `whosonfirst` with maxmindb... yeah, I'm not sure either...
 
+type Response interface {
+	WOFId() int64
+}
+
 type WOFResponse struct {
 	WhosonfirstId uint64 `maxminddb:"whosonfirst_id"`
+}
+
+func (rsp WOFResponse) WOFId() int64 {
+	wofid := int64(rsp.WhosonfirstId)
+	return wofid
 }
 
 type MaxMindResponse struct {
@@ -25,6 +34,18 @@ type MaxMindResponse struct {
 		GeonameId     uint64 `maxminddb:"geoname_id"`
 		WhosonfirstId uint64 `maxminddb:"whosonfirst_id"`
 	} `maxminddb:"city"`
+}
+
+func (rsp MaxMindResponse) WOFId() int64 {
+
+	candidate := rsp.City.WhosonfirstId
+
+	if candidate == 0 {
+		candidate = rsp.Country.WhosonfirstId
+	}
+
+	wofid := int64(candidate)
+	return wofid
 }
 
 type IPLookup struct {
@@ -52,45 +73,50 @@ func NewIPLookup(db string, source string, logger *log.WOFLogger) (*IPLookup, er
 
 func (ip *IPLookup) Query(addr net.IP) (int64, error) {
 
-	/*
-	   Please to be reading ip.source and adjusting accordingly...
-	   As of this writing I am waiting for the 'append a WOF ID to
-	   to standard geolite2 mmdb' databases to complete...
-	   (20160110/thisisaaronland)
-	*/
-	return ip.query_wof(addr)
+	rsp, err := ip.QueryRaw(addr)
+
+	if err != nil {
+		return 0, err
+	}
+
+	wofid := rsp.WOFId()
+	return wofid, nil
 }
 
-func (ip *IPLookup) query_wof(addr net.IP) (int64, error) {
+func (ip *IPLookup) QueryRaw(addr net.IP) (Response, error) {
+
+	var rsp Response
+	var err error
+
+	if ip.source == "wof" {
+		rsp, err = ip.query_wof(addr)
+	} else {
+		rsp, err = ip.query_maxmind(addr)
+	}
+
+	return rsp, err
+}
+
+func (ip *IPLookup) query_wof(addr net.IP) (Response, error) {
 
 	var rsp WOFResponse
 	err := ip.mmdb.Lookup(addr, &rsp)
 
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	wofid := int64(rsp.WhosonfirstId)
-	return wofid, nil
+	return rsp, nil
 }
 
-/* See notes in Query */
-
-func (ip *IPLookup) query_maxmind(addr net.IP) (int64, error) {
+func (ip *IPLookup) query_maxmind(addr net.IP) (Response, error) {
 
 	var rsp MaxMindResponse
 	err := ip.mmdb.Lookup(addr, &rsp)
 
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	candidate := rsp.City.WhosonfirstId
-
-	if candidate == 0 {
-		candidate = rsp.Country.WhosonfirstId
-	}
-
-	wofid := int64(candidate)
-	return wofid, nil
+	return rsp, nil
 }
