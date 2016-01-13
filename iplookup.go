@@ -24,9 +24,80 @@ func (rsp WOFResponse) WOFId() int64 {
 	return wofid
 }
 
+type WOFConcordanceResponse struct {
+	Country struct {
+		// ISOCode       string `maxminddb:"iso_code"`
+		GeonameId uint64 `maxminddb:"geoname_id"`
+	} `maxminddb:"country"`
+	City struct {
+		GeonameId uint64 `maxminddb:"geoname_id"`
+	} `maxminddb:"city"`
+}
+
+func (rsp WOFConcordanceResponse) WOFId() int64 {
+	return 0
+
+	/*
+	possible := make([]uint64, 0)
+
+		 possible = append(possible, rsp.City.GeonameId)
+		 possible = append(possible, rsp.Country.GeonameId)
+
+		 ip.logger.Debug("possible matches for %v: %v", addr, possible)
+
+		 for _, gnid := range possible {
+
+		     if gnid == 0 {
+		     	     continue
+				}
+
+					wofid, err := ip.ConcordifyGeonames(gnid)
+
+					       if err != nil {
+					       	      continue
+							}
+
+								return wofid, nil
+								}
+	*/
+}
+
+/*
+func (rsp WOFConcordanceResponse) ConcordifyGeonames(gnid uint64) (int64, error) {
+
+     ip.logger.Debug("concordify geonames %d", gnid)
+
+     str_gnid := strconv.FormatUint(gnid, 10)
+
+     rows, err := ip.concordances.Where("gn:id", str_gnid)
+
+     if err != nil {
+     	return -1, err
+	}
+
+	first := rows[0]
+	others := first.AsMap()
+
+	str_wofid, ok := others["wof:id"]
+
+	if !ok {
+	   return -1, errors.New("Unable to locate concordance")
+	   }
+
+	   wofid, err := strconv.ParseInt(str_wofid, 10, 64)
+
+	   if err != nil {
+	      return -1, err
+	      }
+
+	      ip.logger.Debug("geonames ID (%d) is WOF ID %d", gnid, wofid)
+	      return wofid, nil
+}
+*/
+
 type MaxMindResponse struct {
 	Country struct {
-		ISOCode       string `maxminddb:"iso_code"`
+		// ISOCode       string `maxminddb:"iso_code"`
 		GeonameId     uint64 `maxminddb:"geoname_id"`
 		WhosonfirstId uint64 `maxminddb:"whosonfirst_id"`
 	} `maxminddb:"country"`
