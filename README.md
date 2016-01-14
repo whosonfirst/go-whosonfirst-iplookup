@@ -40,17 +40,17 @@ wofid, _ := lookup.Query(ip)
 
 When you specify source as `maxmind` you are telling the code "I have a standard MaxMind GeoLite2 database that has been _augmented_ with Who's On First IDs.
 
-Please remember that these do _not_ include the default GeoLite2 that MaxMind distributes. You can either build a WOF-enabled GeoLite2 database using the [p5-Whosonfirst-MaxMind-Writer]() package or by downloading copies that Who's On First maintains. Links to the latter are included below.
+Please remember that these do _not_ include the default GeoLite2 that MaxMind distributes. You can either build a WOF-enabled GeoLite2 database using the [p5-Whosonfirst-MaxMind-Writer](https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer) package or by downloading copies that Who's On First maintains. Links to the latter are included below.
 
 ### whosonfirst
 
-When you specify source as `whosonfirst` you are telling the code "I have a non-standard MaxMind database that has been built using the [p5-Whosonfirst-MaxMind-Writer]() package or that you downloaded from Who's On First. Like the WOF-enabled GeoLite2 databases links are included below.
+When you specify source as `whosonfirst` you are telling the code "I have a non-standard MaxMind database that has been built using the [p5-Whosonfirst-MaxMind-Writer](https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer) package or that you downloaded from Who's On First. Like the WOF-enabled GeoLite2 databases links are included below.
 
 _These non-standard MaxMind databases are still considered experimental. While they will always contain a `whosonfirst_id` property it is still possible that other things may change._
 
 ### concordances
 
-First the `concordances` source is actually `concordances#/some/path/to-a/concordances-file.csv`, most likely the [wof-concordances-latest.csv]() file included in the `whosonfirst-data` repository.
+First the `concordances` source is actually `concordances#/some/path/to-a/concordances-file.csv`, most likely the [wof-concordances-latest.csv](https://github.com/whosonfirst/whosonfirst-data/blob/master/meta/wof-concordances-latest.csv) file included in the `whosonfirst-data` repository.
 
 Okay, now that that's out of the way when you specify source as `concordances` you are telling the code "I have standard MaxMind GeoLite2 database that doesn't contain any Who's On First information _but_ I do have this handy CSV file that maps Geonames IDs to Who's On First IDs so please use that, okay?".
 
