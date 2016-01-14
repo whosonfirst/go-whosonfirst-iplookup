@@ -2,14 +2,6 @@
 
 Go package for doing IP address to Who's On First record lookups
 
-## Description
-
-This is basically a thin wrapper around the [MaxMindDB geoIP2](https://dev.maxmind.com/geoip/geoip2/geolite2/) lookup databases and @oschwald's [maxminddb-golang](https://github.com/oschwald/maxminddb-golang) package.
-
-By default MaxMindDB results include [Geonames](http://www.geonames.org) IDs for each location. We (Who's On First) are working on [tools to generate copies of the MaxMindDB databases with WOF IDs](https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer) as well. That work is not complete yet.
-
-In the meantime this package accepts a concordances "meta" file from the [whosonfirst-data](https://github.com/whosonfirst/whosonfirst-data/) repository and will attempt to map a Geonames ID to a Who's On First ID. As of this writing not every Geonames ID has a Who's On First concordance. They will but in the event of a failed lookup the package will return an error.
-
 ## Usage
 
 ### Example
@@ -24,7 +16,12 @@ import (
 )
 
 mmdb := "GeoLite2-City.mmdb"
-concordances := "wof-concordances-latest.csv"
+source := "concordances#wof-concordances-latest.csv"
+
+// Or maybe something like this
+// db := "whosonfirst-city-latest.mmdb"
+// source := "whosonfirst"
+// See the documentation on "sources" below for details
 
 addr := "142.213.160.134"
 ip := net.ParseIP(addr)
@@ -34,42 +31,102 @@ logger.AddLogger(writer, "warning")
 
 // Note the lack of error-handling
 
-lookup, _ := iplookup.NewIPLookup(mmdb, concordances, logger)
+lookup, _ := iplookup.NewIPLookup(mmdb, source, logger)
 wofid, _ := lookup.Query(ip)
 ```
+## Sources
+
+### maxmind
+
+When you specify source as `maxmind` you are telling the code "I have a standard MaxMind GeoLite2 database that has been _augmented_ with Who's On First IDs.
+
+Please remember that these do _not_ include the default GeoLite2 that MaxMind distributes. You can either build a WOF-enabled GeoLite2 database using the [p5-Whosonfirst-MaxMind-Writer]() package or by downloading copies that Who's On First maintains. Links to the latter are included below.
+
+### whosonfirst
+
+When you specify source as `whosonfirst` you are telling the code "I have a non-standard MaxMind database that has been built using the [p5-Whosonfirst-MaxMind-Writer]() package or that you downloaded from Who's On First. Like the WOF-enabled GeoLite2 databases links are included below.
+
+_These non-standard MaxMind databases are still considered experimental. While they will always contain a `whosonfirst_id` property it is still possible that other things may change._
+
+### concordances
+
+First the `concordances` source is actually `concordances#/some/path/to-a/concordances-file.csv`, most likely the [wof-concordances-latest.csv]() file included in the `whosonfirst-data` repository.
+
+Okay, now that that's out of the way when you specify source as `concordances` you are telling the code "I have standard MaxMind GeoLite2 database that doesn't contain any Who's On First information _but_ I do have this handy CSV file that maps Geonames IDs to Who's On First IDs so please use that, okay?".
 
 ## Utilities
 
 ### wof-iplookup
 
-Perform IP lookup for a list of IP addresses passed on the command line.
+```
+$> ./bin/wof-iplookup -h
+Usage of ./bin/wof-iplookup:
+  -db string
+      The path to your IP lookup database file
+  -loglevel string
+    	     (default "warning")
+  -raw
+	Dump the raw query response as JSON
+  -source string
+    	  The source of the IP lookups (default "maxmind")
+```
+
+Perform an IP lookup for a list of IP addresses passed on the command line. By default this emits a single Who's On First ID on a new line for each IP address passed in as an argument.
+
+Here's an example using a `concordances` file as the input source and verbose logging, just so you can see what's going on under the hood:
 
 ```
-$> ./bin/wof-iplookup -mmdb GeoLite2-City.mmdb -concordances /usr/local/mapzen/whosonfirst-data/meta/wof-concordances-latest.csv -loglevel debug 8.8.8.8 8.8.8.4 142.213.160.134
-[wof-iplookup] 00:20:49.187094 [debug] time to index concordances 3.03230889s
-[wof-iplookup] 00:20:49.187217 [debug] possible matches for 8.8.8.8: [5375480 6252001]
-[wof-iplookup] 00:20:49.187244 [debug] concordify geonames 5375480
-[wof-iplookup] 00:20:49.187272 [debug] geonames ID (5375480) is WOF ID 85922355
-[wof-iplookup] 00:20:49.187284 [debug] 8.8.8.8 is 85922355
+$> ./bin/wof-iplookup -loglevel debug -db /usr/local/mapzen/mmdb/wof-mm-city.mmdb -source concordances#/usr/local/mapzen/whosonfirst-data/meta/wof-concordances-latest.csv 8.8.8.4
+[wof-iplookup] 16:22:59.667597 [debug] create new IP lookup using /usr/local/mapzen/mmdb/wof-mm-city.mmdb (concordances#/usr/local/mapzen/whosonfirst-data/meta/wof-concordances-latest.csv)
+[wof-iplookup] 16:22:59.667968 [debug] loading concordances database /usr/local/mapzen/whosonfirst-data/meta/wof-concordances-latest.csv
+[wof-iplookup] 16:22:59.667984 [debug] indexing gn:id
+[wof-iplookup] 16:23:01.935802 [debug] time to index concordances: 2.267799616s
+[wof-iplookup] 16:23:01.935829 [debug] lookup 8.8.8.4
 85922355
-[wof-iplookup] 00:20:49.187310 [debug] possible matches for 8.8.8.4: [5375480 6252001]
-[wof-iplookup] 00:20:49.187326 [debug] concordify geonames 5375480
-[wof-iplookup] 00:20:49.187335 [debug] geonames ID (5375480) is WOF ID 85922355
-[wof-iplookup] 00:20:49.187353 [debug] 8.8.8.4 is 85922355
-85922355
-[wof-iplookup] 00:20:49.187391 [debug] possible matches for 142.213.160.134: [0 6251999]
-[wof-iplookup] 00:20:49.187403 [debug] concordify geonames 6251999
-[wof-iplookup] 00:20:49.187415 [debug] geonames ID (6251999) is WOF ID 85633041
-[wof-iplookup] 00:20:49.187427 [debug] 142.213.160.134 is 85633041
-85633041
+```
+
+If you want to see the complete response coming back from the database you can pass in the `-raw` flag which will print an encoded JSON string for each IP address passed in as an argument. 
+
+Here's an example using a `maxmind` IP data as the input source:
+
+```
+$> ./bin/wof-iplookup -raw -db /usr/local/mapzen/mmdb/wof-mm-city.mmdb -source maxmind 142.213.160.134 | python -mjson.tool
+{
+    "City": {
+        "GeonameId": 0,
+        "WhosonfirstId": 0
+    },
+    "Country": {
+        "GeonameId": 6251999,
+        "WhosonfirstId": 85633041
+    }
+}
 ```
 
 ### wof-iplookup-server
 
+```
+$> ./bin/wof-iplookup-server  -h
+Usage of ./bin/wof-iplookup-server:
+  -cors
+	Enable CORS headers
+  -db string
+      The path to your IP lookup database file
+  -host string
+    	The hostname to listen for requests on (default "localhost")
+  -loglevel string
+    	     (default "status")
+  -port int
+    	The port number to listen for requests on (default 8668)
+  -source string
+    	  The source of the IP lookups (default "maxmind")
+```
+
 A handy HTTP pony for performing IP lookups as a service.
 
 ```
-$> ./bin/wof-iplookup-server -mmdb GeoLite2-City.mmdb -concordances /usr/local/mapzen/whosonfirst-data/meta/wof-concordances-latest.csv
+$> ./bin/wof-iplookup-server -loglevel info -db ~/usr/local/mapzen/whosonfirst-city-20160111.mmdb -source whosonfirst 
+[wof-iplookup] 16:51:21.949622 [status] wof-iplookup-server running at localhost:8668
 ```
 
 And then:
@@ -78,13 +135,19 @@ And then:
 $> curl -s 'http://localhost:8668?ip=205.193.117.158' | python -mjson.tool
 {
     "ip": "205.193.117.158",
-    "wofid": 85784763
+    "wofid": 101735873
 }
 ```
 
 ## Caveats
 
-* The `wof-iplookup-server` does not return any data (like centroids, hierarchies or geometries) for a WOF record besides its ID. Yet.
+### Metadata
+
+Neither the `wof-iplookup-server` or the `ip-lookup` tool (when run with the `-raw` flag) return any additional metadata data for a WOF record besides a Who's On First ID. For example the default GeoLite2 databases contain lots of useful place names and the WOF-enabled derivatives contain bounding box and other useful geographic information. Once the basic database wrangling settles down a bit it will make sense to start bubbling that information back up to consumer applications.
+
+# Downloads
+
+TBW
 
 ## See also
 

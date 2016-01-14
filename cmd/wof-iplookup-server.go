@@ -20,8 +20,8 @@ type Response struct {
 
 func main() {
 
-	var mmdb = flag.String("mmdb", "", "The path to your mmdb file")
-	var source = flag.String("source", "maxmind", "Who created this mmdb file?")
+	var db = flag.String("db", "", "The path to your IP lookup database file")
+	var source = flag.String("source", "maxmind", "The source of the IP lookups")
 	var host = flag.String("host", "localhost", "The hostname to listen for requests on")
 	var port = flag.Int("port", 8668, "The port number to listen for requests on")
 	var cors = flag.Bool("cors", false, "Enable CORS headers")
@@ -34,7 +34,7 @@ func main() {
 	logger := log.NewWOFLogger("[wof-iplookup] ")
 	logger.AddLogger(writer, *loglevel)
 
-	lookup, err := iplookup.NewIPLookup(*mmdb, *source, logger)
+	lookup, err := iplookup.NewIPLookup(*db, *source, logger)
 
 	if err != nil {
 		logger.Error("failed to create IPLookup because %v", err)

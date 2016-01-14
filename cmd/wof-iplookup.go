@@ -13,8 +13,8 @@ import (
 
 func main() {
 
-	var mmdb = flag.String("mmdb", "", "The path to your mmdb file")
-	var source = flag.String("source", "maxmind", "Who created this mmdb file?")
+	var db = flag.String("db", "", "The path to your IP lookup database file")
+	var source = flag.String("source", "maxmind", "The source of the IP lookups")
 	var raw = flag.Bool("raw", false, "Dump the raw query response as JSON")
 	var loglevel = flag.String("loglevel", "warning", "")
 
@@ -26,7 +26,7 @@ func main() {
 	logger := log.NewWOFLogger("[wof-iplookup] ")
 	logger.AddLogger(writer, *loglevel)
 
-	lookup, err := iplookup.NewIPLookup(*mmdb, *source, logger)
+	lookup, err := iplookup.NewIPLookup(*db, *source, logger)
 
 	if err != nil {
 		logger.Error("failed to create IPLookup because %v", err)
