@@ -64,7 +64,7 @@ func main() {
 		logger.Debug("parse IP %s", ip)
 
 		addr := net.ParseIP(ip)
-		wofid, err := lookup.Query(addr)
+		wofid, err := lookup.QueryId(addr)
 
 		if err != nil {
 			http.Error(rsp, err.Error(), http.StatusInternalServerError)

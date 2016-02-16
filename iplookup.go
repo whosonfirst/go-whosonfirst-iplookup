@@ -218,9 +218,9 @@ func NewIPLookup(db string, source string, logger *log.WOFLogger) (*IPLookup, er
 	return &ip, nil
 }
 
-func (ip *IPLookup) Query(addr net.IP) (int64, error) {
+func (ip *IPLookup) QueryId(addr net.IP) (int64, error) {
 
-	rsp, err := ip.QueryRaw(addr)
+	rsp, err := ip.Query(addr)
 
 	if err != nil {
 		return 0, err
@@ -230,7 +230,19 @@ func (ip *IPLookup) Query(addr net.IP) (int64, error) {
 	return wofid, nil
 }
 
-func (ip *IPLookup) QueryRaw(addr net.IP) (Response, error) {
+func (ip *IPLookup) QueryRaw(addr net.IP) (interface{}, error) {
+
+	var rsp interface{}
+	err := ip.mmdb.Lookup(addr, &rsp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return rsp, err
+}
+
+func (ip *IPLookup) Query(addr net.IP) (Response, error) {
 
 	var rsp Response
 	var err error

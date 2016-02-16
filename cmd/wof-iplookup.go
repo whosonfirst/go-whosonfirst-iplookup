@@ -15,7 +15,8 @@ func main() {
 
 	var db = flag.String("db", "", "The path to your IP lookup database file")
 	var source = flag.String("source", "maxmind", "The source of the IP lookups")
-	var raw = flag.Bool("raw", false, "Dump the raw query response as JSON")
+	var raw = flag.Bool("raw", false, "Return the raw data")
+	var asjson = flag.Bool("json", false, "Dump the raw query response as JSON")
 	var loglevel = flag.String("loglevel", "warning", "")
 
 	flag.Parse()
@@ -36,8 +37,9 @@ func main() {
 	for _, addr := range args {
 
 		ip := net.ParseIP(addr)
-
 		logger.Debug("lookup %s", addr)
+
+		var result interface{}
 
 		if *raw {
 
@@ -47,17 +49,24 @@ func main() {
 				logger.Error("failed to lookup %s, because %v", addr, err)
 			}
 
-			enc, _ := json.Marshal(rsp)
-			fmt.Printf("%s\n", enc)
+			result = rsp
+
 		} else {
 
-			wofid, err := lookup.Query(ip)
+			rsp, err := lookup.Query(ip)
 
 			if err != nil {
 				logger.Error("failed to lookup %s, because %v", addr, err)
 			}
 
-			fmt.Println(wofid)
+			result = rsp
+		}
+
+		if *asjson {
+			enc, _ := json.Marshal(result)
+			fmt.Printf("%s\n", enc)
+		} else {
+			fmt.Println(result)
 		}
 	}
 }
