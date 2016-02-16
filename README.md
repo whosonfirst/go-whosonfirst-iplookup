@@ -32,7 +32,7 @@ logger.AddLogger(writer, "warning")
 // Note the lack of error-handling
 
 lookup, _ := iplookup.NewIPLookup(mmdb, source, logger)
-wofid, _ := lookup.Query(ip)
+wofid, _ := lookup.QueryId(ip)
 ```
 ## Sources
 
@@ -63,10 +63,12 @@ $> ./bin/wof-iplookup -h
 Usage of ./bin/wof-iplookup:
   -db string
       The path to your IP lookup database file
+  -json
+	Dump the raw query response as JSON
   -loglevel string
     	     (default "warning")
   -raw
-	Dump the raw query response as JSON
+	Return the raw data
   -source string
     	  The source of the IP lookups (default "maxmind")
 ```
@@ -90,7 +92,7 @@ If you want to see the complete response coming back from the database you can p
 Here's an example using a `maxmind` IP data as the input source:
 
 ```
-$> ./bin/wof-iplookup -raw -db /usr/local/mapzen/mmdb/wof-mm-city.mmdb -source maxmind 142.213.160.134 | python -mjson.tool
+$> ./bin/wof-iplookup -json -db /usr/local/mapzen/mmdb/wof-mm-city.mmdb -source maxmind 142.213.160.134 | python -mjson.tool
 {
     "City": {
         "GeonameId": 0,
@@ -139,18 +141,41 @@ $> curl -s 'http://localhost:8668?ip=205.193.117.158' | python -mjson.tool
 }
 ```
 
+You can also pass in a `raw=ANYTHING` parameter to get all the data for a given record. Like this:
+
+```
+curl -s 'http://localhost:8668?ip=205.193.117.158&raw=1' | python -mjson.tool
+{
+    "continent_id": 102191575,
+    "country_id": 85633041,
+    "disputed_id": 0,
+    "geom_bbox": "-76.3555857,44.9617738,-75.2465783,45.5376514",
+    "geom_latitude": 45.293133,
+    "geom_longitude": -75.775424,
+    "geoname_id": 6094817,
+    "lbl_latitude": 45.209415,
+    "lbl_longitude": -75.783876,
+    "localadmin_id": 0,
+    "locality_id": 101735873,
+    "macroregion_id": 0,
+    "mm_latitude": 45.3548,
+    "mm_longitude": -75.5773,
+    "name": "Ottawa",
+    "placetype": "locality",
+    "region_id": 85682057,
+    "whosonfirst_id": 101735873
+}
+```
+
 ## Caveats
 
 ### Metadata
 
 Neither the `wof-iplookup-server` or the `ip-lookup` tool (when run with the `-raw` flag) return any additional metadata data for a WOF record besides a Who's On First ID. For example the default GeoLite2 databases contain lots of useful place names and the WOF-enabled derivatives contain bounding box and other useful geographic information. Once the basic database wrangling settles down a bit it will make sense to start bubbling that information back up to consumer applications.
 
-# Downloads
-
-TBW
-
 ## See also
 
+* https://whosonfirst.mapzen.com/mmdb/
+* https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer
 * https://github.com/oschwald/maxminddb-golang
 * https://dev.maxmind.com/geoip/geoip2/geolite2/
-* https://github.com/whosonfirst/p5-Whosonfirst-MaxMind-Writer
