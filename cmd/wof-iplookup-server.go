@@ -45,6 +45,7 @@ func main() {
 
 		query := req.URL.Query()
 		ip := query.Get("ip")
+		raw := query.Get("raw")
 
 		if ip == "" {
 			remote := strings.Split(req.RemoteAddr, ":")
@@ -64,14 +65,30 @@ func main() {
 		logger.Debug("parse IP %s", ip)
 
 		addr := net.ParseIP(ip)
-		wofid, err := lookup.QueryId(addr)
+		var answer interface{}
 
-		if err != nil {
-			http.Error(rsp, err.Error(), http.StatusInternalServerError)
-			return
+		if raw != "" {
+
+			qrsp, err := lookup.QueryRaw(addr)
+
+			if err != nil {
+				http.Error(rsp, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			answer = qrsp
+
+		} else {
+			wofid, err := lookup.QueryId(addr)
+
+			if err != nil {
+				http.Error(rsp, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			answer = Response{ip, wofid}
 		}
 
-		answer := Response{ip, wofid}
 		js, err := json.Marshal(answer)
 
 		if err != nil {
