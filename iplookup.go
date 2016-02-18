@@ -172,18 +172,11 @@ func NewIPLookup(db string, source string, logger *log.WOFLogger) (*IPLookup, er
 
 		ip.logger.Debug("loading concordances database %s", data)
 
-		// Waiting on the 'reload' branch of go-wof-csvdb to be
-		// pushed to master (20160113/thisisaaronland)
+		db, err := csvdb.NewCSVDB(ip.logger)
 
-		db := csvdb.NewCSVDB()
-
-		/*
-		   db, err := csvdb.NewCSVDB()
-
-		   if err != nil {
-		      return nil, err
-		   }
-		*/
+		if err != nil {
+			return nil, err
+		}
 
 		t1 := time.Now()
 
