@@ -24,6 +24,7 @@ func main() {
 	var source = flag.String("source", "maxmind", "The source of the IP lookups")
 	var host = flag.String("host", "localhost", "The hostname to listen for requests on")
 	var port = flag.Int("port", 8668, "The port number to listen for requests on")
+	var header = flag.String("header", "", "Use this request header for determining remote address")
 	var cors = flag.Bool("cors", false, "Enable CORS headers")
 	var loglevel = flag.String("loglevel", "status", "")
 
@@ -48,8 +49,13 @@ func main() {
 		raw := query.Get("raw")
 
 		if ip == "" {
-			remote := strings.Split(req.RemoteAddr, ":")
-			ip = remote[0]
+
+			if *header != "" {
+				ip = req.Header.Get(*header)
+			} else {
+				remote := strings.Split(req.RemoteAddr, ":")
+				ip = remote[0]
+			}
 		}
 
 		if ip == "" {
