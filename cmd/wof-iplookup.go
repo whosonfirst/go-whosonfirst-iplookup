@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"github.com/whosonfirst/go-whosonfirst-iplookup"
 	"github.com/whosonfirst/go-whosonfirst-log"
@@ -29,7 +30,13 @@ func main() {
 			logger.Fatal("unable to query %s because %s", ip, err)
 		}
 
-		logger.Status("%s becomes %v", ip, r)
+		enc, err := json.Marshal(r)
+
+		if err != nil {
+			logger.Fatal("unable to encode %s because %s", ip, err)
+		}
+
+		logger.Status("%s becomes %s", ip, string(enc))
 	}
 
 	os.Exit(0)

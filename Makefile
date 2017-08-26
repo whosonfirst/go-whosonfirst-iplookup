@@ -4,8 +4,10 @@ prep:
 self:	prep
 	if test -d src/github.com/whosonfirst/go-whosonfirst-iplookup; then rm -rf src/github.com/whosonfirst/go-whosonfirst-iplookup; fi
 	mkdir -p src/github.com/whosonfirst/go-whosonfirst-iplookup
+	mkdir -p src/github.com/whosonfirst/go-whosonfirst-iplookup/provider
 	mkdir -p src/github.com/whosonfirst/go-whosonfirst-iplookup/http
 	cp iplookup.go src/github.com/whosonfirst/go-whosonfirst-iplookup/
+	cp provider/*.go src/github.com/whosonfirst/go-whosonfirst-iplookup/provider/
 	cp http/*.go src/github.com/whosonfirst/go-whosonfirst-iplookup/http/
 	cp -r vendor/* src/
 
@@ -28,6 +30,7 @@ vendor-deps: deps
 	rm -rf src
 fmt:
 	go fmt cmd/*.go
+	go fmt provider/*.go
 	go fmt http/*.go
 	go fmt *.go
 

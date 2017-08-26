@@ -31,8 +31,6 @@ func LookupHandler(l *iplookup.IPLookup) (gohttp.Handler, error) {
 			return
 		}
 
-		l.Logger.Debug("parse IP %s", ip)
-
 		addr := net.ParseIP(ip)
 
 		r, err := l.Query(addr)
