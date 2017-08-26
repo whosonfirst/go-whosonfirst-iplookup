@@ -59,6 +59,12 @@ func NewIPLookup(db string, cb IPLookupToResponse) (*IPLookup, error) {
 	return &ip, nil
 }
 
+func (ip *IPLookup) QueryString(str_addr string) (Response, error) {
+
+	addr := net.ParseIP(str_addr)
+	return ip.Query(addr)
+}
+
 func (ip *IPLookup) Query(addr net.IP) (Response, error) {
 
 	var i interface{}
