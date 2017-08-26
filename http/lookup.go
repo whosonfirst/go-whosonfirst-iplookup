@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func LookupHandler(l *iplookup.IPLookup) (gohttp.Handler, error) {
+func LookupHandler(pr iplookup.Provider) (gohttp.Handler, error) {
 
 	fn := func(rsp gohttp.ResponseWriter, req *gohttp.Request) {
 
@@ -33,7 +33,7 @@ func LookupHandler(l *iplookup.IPLookup) (gohttp.Handler, error) {
 
 		addr := net.ParseIP(ip)
 
-		r, err := l.Query(addr)
+		r, err := pr.Query(addr)
 
 		if err != nil {
 			gohttp.Error(rsp, err.Error(), gohttp.StatusInternalServerError)

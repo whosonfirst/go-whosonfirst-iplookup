@@ -6,6 +6,7 @@ import (
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/whosonfirst/go-whosonfirst-iplookup"
 	"github.com/whosonfirst/go-whosonfirst-iplookup/http"
+	"github.com/whosonfirst/go-whosonfirst-iplookup/provider"
 	"github.com/whosonfirst/go-whosonfirst-log"
 	"io"
 	gohttp "net/http"
@@ -26,18 +27,14 @@ func main() {
 	logger := log.NewWOFLogger()
 	logger.AddLogger(writer, *loglevel)
 
-	cb := iplookup.SPRRecordToReponse
-
-	lookup, err := iplookup.NewIPLookup(*db, cb)
+	pr, err := provider.NewMMDBProvider(*db, iplookup.SPRRecordToResult)
 
 	if err != nil {
 		logger.Error("failed to create IPLookup because %v", err)
 		os.Exit(1)
 	}
 
-	lookup.Logger = logger
-
-	lookuphandler, err := http.LookupHandler(lookup)
+	lookuphandler, err := http.LookupHandler(pr)
 
 	if err != nil {
 		logger.Fatal("failed to create Lookup handler because %s", err)

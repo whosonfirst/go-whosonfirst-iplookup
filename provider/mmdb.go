@@ -6,44 +6,44 @@ import (
 	"net"
 )
 
-type MMDB struct {
+type MMDBProvider struct {
 	iplookup.Provider
 	handler iplookup.InflateResponseFunc
 	db      *maxminddb.Reader
 }
 
-func NewMMDB(path string, handler iplookup.InflateResponseFunc) (iplookup.Provider, error) {
+func NewMMDBProvider(path string, handler iplookup.InflateResponseFunc) (iplookup.Provider, error) {
 
-	db, err := maxminddb.Open(db)
+	db, err := maxminddb.Open(path)
 
 	if err != nil {
 		return nil, err
 	}
 
-	mm := MMDB{
+	pr := MMDBProvider{
 		db:      db,
 		handler: handler,
 	}
 
-	return &mm, nil
+	return &pr, nil
 }
 
-func (mm *MMDB) QueryString(str_addr string) (Result, error) {
+func (pr *MMDBProvider) QueryString(str_addr string) (iplookup.Result, error) {
 
 	addr := net.ParseIP(str_addr)
-	return mm.Query(addr)
+	return pr.Query(addr)
 }
 
-func (mm *MMDB) Query(addr net.Addr) (Result, error) {
+func (pr *MMDBProvider) Query(addr net.IP) (iplookup.Result, error) {
 
 	var i interface{}
-	err := ip.mmdb.Lookup(addr, &i)
+	err := pr.db.Lookup(addr, &i)
 
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := ip.handler(i)
+	r, err := pr.handler(i)
 
 	if err != nil {
 		return nil, err
