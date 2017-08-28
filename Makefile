@@ -21,6 +21,7 @@ deps:	rmdeps
 	@GOPATH=$(shell pwd) go get -u "github.com/oschwald/maxminddb-golang"
 	@GOPATH=$(shell pwd) go get -u "github.com/whosonfirst/go-whosonfirst-log"
 	@GOPATH=$(shell pwd) go get -u "github.com/whosonfirst/go-whosonfirst-mmdb"
+	@GOPATH=$(shell pwd) go get -u "github.com/whosonfirst/go-whosonfirst-spr"
 
 vendor-deps: deps
 	if test -d vendor; then rm -rf vendor; fi
